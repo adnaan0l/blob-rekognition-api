@@ -3,7 +3,6 @@ import time
 import logging
 import os
 
-from todos import decimalencoder
 import boto3
 dynamodb = boto3.resource('dynamodb')
 
@@ -33,7 +32,6 @@ def update(event, context):
         },
         ExpressionAttributeValues={
           ':text': json.dumps(recognition_data),
-          ':checked': data['checked'],
           ':updatedAt': timestamp,
         },
         UpdateExpression='SET #recongition_data = :text, '
@@ -44,7 +42,7 @@ def update(event, context):
 
     # Check if update success
     try:
-        result['Attributes']
+        response['Attributes']
     except:
         logging.error('Error. Update failed.')
         logging.error(response)

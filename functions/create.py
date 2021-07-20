@@ -26,7 +26,7 @@ def info_to_dynamo(data):
     item = {
         'id': str(uuid.uuid1()),
         'data': "",
-        'callback_url' : data['callback_url'] 
+        'callback_url' : data['callback_url'],
         'checked': False,
         'createdAt': timestamp,
         'updatedAt': timestamp,
@@ -35,33 +35,29 @@ def info_to_dynamo(data):
     # Write record into the database
     response = table.put_item(Item=item)
     
-    try:
-        response['ConsumedCapacity']
-    except:
+    if response['ResponseMetadata']['HTTPStatusCode'] != 200:
         logging.error("Insert Failed")
         logging.error(response)
     else:
         return {
             "id" : item["id"],
-            "callback" : item["callback_url"]
+            "callback_url" : item["callback_url"]
         }
 
 ## Generates and returns presigned URL 
 def create_presigned_url(blob_info):
-
     s3_client = boto3.client('s3')
-
     # Load initial parameters
     bucket_name = os.environ['S3_BUCKET']
-    object_name = blob_info["id"]+".png"
-    expiration = 600
+    object_name = "uploads/"+blob_info["id"]+".png"
+    expiration = 300
     # Generate a presigned S3 URL for upload
     try:
         url = s3_client.generate_presigned_url('put_object', 
                                                     Params = {'Bucket': bucket_name,
                                                      'Key': object_name},
                                                      ExpiresIn=expiration)
-    except ClientError as e:
+    except Exception as e:
         logging.error('Error. URL generation failed')
         logging.error(e)
     else:
@@ -72,23 +68,23 @@ def create_presigned_url(blob_info):
 
 # Return upload HTML page with info + presigned URL
 def create(event, context):
+
     # Read event body
     data = json.loads(event['body'])
     
     # Creates blob info
     blob_info = info_to_dynamo(data)
-
     # Creates URL info
     url_info = create_presigned_url(blob_info)
 
-    response = {
+    body = {
         'blob_id': blob_info['id'],
-        'callback_url': blob_info['callback'],
+        'callback_url': blob_info['callback_url'],
         'upload_url': url_info['url']
     }
-
+    
     return {
-        "statuscode" : 200,
-        "body" : json.dumps(response)
-    }
+        "statusCode" : 200,
+        "body" : json.dumps(body)
+    } 
 

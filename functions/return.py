@@ -1,7 +1,8 @@
 import requests
+import logging
 import boto3
 
-def return(event, context):
+def return_blob(event, context):
     
     # Get record
     record = event['Records'][0]
