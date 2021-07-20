@@ -1,0 +1,11 @@
+{
+    "statusCode" : 200,
+    "type": "object",
+    "properties": {
+        "callback_url": {
+            "type": "string",
+            "format": "url"
+        },
+        "required": "callback_url"
+    }
+}

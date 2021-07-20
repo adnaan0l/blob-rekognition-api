@@ -1,0 +1,156 @@
+service: blobs-recognition-api
+
+frameworkVersion: ">=1.1.0"
+
+plugins: 
+ -serverless-openapi-plugin
+
+provider:
+  name: aws
+  region: ap-south-1
+  stage: dev
+  runtime: python3.8
+  environment: 
+    DYNAMODB_TABLE: ${file(./config/${opt:stage, 'dev'}.json):dynamodb_table}
+    S3_BUCKET : ${file(./config/${opt:stage, 'dev'}.json):s3_bucket}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:DescribeStream
+            - dynamodb:GetRecords
+            - dynamodb:GetShardIterator
+            - dynamodb:ListStreams
+          Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:ListBucket
+            - s3:ListBucketVersions
+          Resource:
+            - 'arn:aws:s3:::${self:provider.environment.S3_BUCKET}'
+            - 'arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*'
+        - Effect: 'Allow'
+          Action: '*'
+          Resource: '*'
+
+custom:
+  documentation:
+    models:
+      - name: GetBlobInfoResponse
+        description: GET Document response model
+        contentType: application/json
+        schema: ${file(models/GetBlobInfoResponse.json)}
+      - name: PostInfoResponse
+        description: POST Info response model
+        contentType: application/json
+        schema: ${file(models/PostInfoResponse.json)}
+      - name: PostInfoRequest
+        description: POST Info request model
+        contentType: application/json
+        schema: ${file(models/PostInfoResponse.json)}
+      - name: PostErrorResponse
+        description: POST Error response model
+        contentType: application/json
+        schema: ${file(models/PostErrorResponse.json)}
+      - name: GetErrorResponse
+        description: GET Error response model
+        contentType: application/json
+        schema: ${file(models/GetErrorResponse.json)}
+
+functions:
+  create:
+    handler: functions/create.create
+    events:
+      - http:
+        path: /blobs
+        method: post
+        documentation:
+          summary: createBlob
+          description: Create blob. Callback json body should be in the same schema as GET endpoint response
+          requestBody:
+            description: Put object that needs to be sent to Rekognition service
+          requestModels:
+            application/json: PutDocumentRequest
+          methodResponses:
+            - statusCode: 201
+              responseBody:
+                description: blob was created
+              responseModels:
+                application/json: PostInfoResponse
+            - statusCode: 400
+              responseBody:
+                description: Invalid callback url supplied
+              responseModels:
+                application/json: PostErrorResponse
+  get:
+    handler: functions/get.get
+    events:
+      - http:
+        path: /blobs/{blob_id}
+        method: get
+        documentation:
+          summary: Get blob info
+          description: Returns blob details on record when provided with the ID
+          requestBody:
+            description: Blob ID provided to the user
+          requestModels:
+            application/json: PutDocumentRequest
+          pathParams:
+            - name: blob_id
+              description: The blob id to query
+              schema:
+                type: string
+                format: uuid
+          methodResponses:
+            - statusCode: 200
+              responseBody:
+                description: Blob info
+              responseModels:
+                application/json: GetBlobInfoResponse
+            - statusCode: 404
+              responseBody:
+                description: Blob not fond
+              responseModels:
+                application/json: GetErrorResponse
+  process:
+    handler: functions/process.process
+    events:
+      - s3:
+          bucket: photos
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: uploads/
+            - suffix: .png
+  return:
+    handler: functions/return.return
+    events:
+      - stream:
+          arn: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}
+resources:
+  Resources:
+    BlobsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 10
+          WriteCapacityUnits: 10
+        StreamSpecification:
+          StreamViewType: NEW_IMAGES
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}

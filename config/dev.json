@@ -1,0 +1,5 @@
+
+{   
+    "dynamodb_table" : "blob-storage-db",
+    "s3_bucket": "input-blobs-s3"
+}
