@@ -4,25 +4,12 @@ import logging
 import os
 import boto3
 
+from functions.helpers import detect_labels
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')
-rekognition = boto3.client('rekognition')
-
-s3_bucket = os.environ['S3_BUCKET']
-
-def detect_labels(object):
-    response = rekognition.detect_labels(
-    Image={
-        'S3Object': {
-            'Bucket': s3_bucket,
-            'Name': object
-        }
-    },
-    MaxLabels=3
-    )
-    return response
 
 def process(event, context):
 

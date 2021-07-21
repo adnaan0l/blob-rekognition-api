@@ -7,8 +7,8 @@ import uuid
 import boto3
 from botocore.client import Config
 
-from functions.create_url import create_presigned_url
-from functions.info_to_db import to_dynamo
+from functions.helpers import create_presigned_url
+from functions.helpers import to_dynamo
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
