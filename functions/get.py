@@ -22,8 +22,6 @@ def get(event, context):
     response = fetch_data(blob_id)
 
     # Check response valids
-    check_response(response, blob_id)
-
     if response['ResponseMetadata']['HTTPStatusCode'] != 200:
         logger.error('Error retrieving id: {} failed'.format(blob_id))
         logger.error(response)
