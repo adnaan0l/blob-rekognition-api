@@ -2,9 +2,6 @@ service: blobs-recognition-api
 
 frameworkVersion: ">=1.1.0"
 
-plugins: 
- -serverless-openapi-plugin
-
 provider:
   name: aws
   region: ap-south-1
@@ -65,6 +62,13 @@ custom:
         description: GET Error response model
         contentType: application/json
         schema: ${file(models/GetErrorResponse.json)}
+
+layers:
+  dependancies:
+    path: layers/dependancies
+    compatibleRuntimes:
+      - python3.8
+    description: "Dependencies requests module for the blob API"
 
 functions:
   create:
@@ -130,27 +134,55 @@ functions:
           rules:
             - prefix: uploads/
             - suffix: .jpg
-  # return:
-  #   handler: functions/return.return_blob
-  #   events:
-  #     - stream:
-  #         arn: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:service}-${opt:region, self:provider.region}-${self:provider.environment.DYNAMODB_TABLE}
+  callback:
+    handler: functions/callback.callback
+    events:
+      - http:
+          path: /callback/{blob_id}
+          method: post
+  return:
+    handler: functions/return.return_blob
+    layers:
+      - { Ref: DependanciesLambdaLayer }
+
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - BlobsDynamoDbTable
+              - StreamArn
+          batchSize: 1
+
 resources:
   Resources:
     BlobsDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
       Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
         AttributeDefinitions:
-          -
-            AttributeName: id
+          - AttributeName: id
             AttributeType: S
         KeySchema:
-          -
-            AttributeName: id
+          - AttributeName: id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         StreamSpecification:
           StreamViewType: NEW_IMAGE
-        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+    # StreamFunctionEventSourceMappingDynamodbMyTable:
+    #   Type: AWS::Lambda::EventSourceMapping
+    #   DependsOn: IamPolicyLambdaExecution
+    #   Properties:
+    #     BatchSize: 10
+    #     EventSourceArn:
+    #       Fn::GetAtt:
+    #         - ${self:provider.environment.DYNAMODB_TABLE}
+    #         - StreamArn
+    #     FunctionName:
+    #       Fn::GetAtt:
+    #         - streamFunctionLambdaFunction
+    #         - Arn
+    #     StartingPosition: TRIM_HORIZON
+    #     Enabled: True

@@ -10,6 +10,8 @@ from botocore.client import Config
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+bucket_name = os.environ['S3_BUCKET']
+
 # Insert data to Dynamo DB
 def to_dynamo(data):
 
@@ -54,7 +56,7 @@ def to_dynamo(data):
 def create_presigned_url(blob_info):
     s3_client = boto3.client('s3', config=Config(signature_version='s3v4'))
     # Load initial parameters
-    bucket_name = os.environ['S3_BUCKET']
+    
     object_name = "uploads/"+blob_info["id"]+".jpg"
     expiration = 3600
     # Generate a presigned S3 URL for upload
@@ -76,10 +78,14 @@ def create_presigned_url(blob_info):
         }
 
 def detect_labels(object):
+
+    rekognition = boto3.client('rekognition')
+
+
     response = rekognition.detect_labels(
     Image={
         'S3Object': {
-            'Bucket': s3_bucket,
+            'Bucket': bucket_name,
             'Name': object
         }
     },
