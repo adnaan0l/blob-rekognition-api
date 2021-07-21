@@ -21,7 +21,6 @@ dynamodb = boto3.resource('dynamodb')
 # Generate timestamp
 timestamp = str(time.time())
 
-
 '''
 Insert to DynamoDB
 '''
@@ -125,12 +124,29 @@ def insert_data(blob_id, labels):
         },
         ExpressionAttributeValues={
           ':data': json.dumps(labels),
-          ':checked': True,
+          ':isProcessed': True,
           ':updatedAt': timestamp
         },
-        UpdateExpression='SET #labels = :data, '
-                         'checked = :checked, '
+        UpdateExpression='SET #labels = :data,'
+                         'isProcessed = :isProcessed,'
                          'updatedAt = :updatedAt',
+        ReturnValues='NONE',
+    )
+    return response
+#
+def update_posted(blob_id):
+    table = dynamodb.Table(table_name)
+    response = table.update_item(
+        Key={
+            'id': blob_id
+        },
+        ExpressionAttributeNames={
+          '#postedAt': 'postedAt',
+        },
+        ExpressionAttributeValues={
+          ':postedAt': timestamp
+        },
+        UpdateExpression='SET #postedAt = :postedAt,',
         ReturnValues='NONE',
     )
     return response

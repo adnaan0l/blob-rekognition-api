@@ -2,6 +2,8 @@ import requests
 import logging
 import boto3
 
+from functions.helpers import update_posted
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -15,7 +17,7 @@ def return_blob(event, context):
     # Get record
     record = event['Records'][0]['dynamodb']['NewImage']
 
-    # Get call back URL
+    # Get callback URL
     callback_url = record['callback_url']['S']
 
     blob_id = record['id']['S']
@@ -30,6 +32,7 @@ def return_blob(event, context):
     # Check for errors
     if r.status_code == 200:
         logging.info('Successfully posted Rekognition data to {}/{} for id: {}'.format(callback_url, blob_id, blob_id))
+    
     else:
         logging.error('Failed posting data to {}/{} for id: {}. Please check args.'.format(callback_url, blob_id, blob_id))
         logging.error(r)

@@ -77,26 +77,26 @@ functions:
       - http:
           path: /blobs
           method: post
-          documentation:
-            summary: createBlob
-            description: Create blob. Callback json body should be in the same schema as GET endpoint response
-            tags:
-              -blobs
-            requestBody:
-              description: Put object that needs to be sent to Rekognition service
-            requestModels:
-              application/json: PostInfoRequest
-            methodResponses:
-              - statusCode: 201
-                responseBody:
-                  description: blob was created
-                responseModels:
-                  application/json: PostInfoResponse
-              - statusCode: 400
-                responseBody:
-                  description: Invalid callback url supplied
-                responseModels:
-                  application/json: PostErrorResponse
+          # documentation:
+          #   summary: createBlob
+          #   description: Create blob. Callback json body should be in the same schema as GET endpoint response
+          #   tags:
+          #     -blobs
+          #   requestBody:
+          #     description: Put object that needs to be sent to Rekognition service
+          #   requestModels:
+          #     application/json: PostInfoRequest
+          #   methodResponses:
+          #     - statusCode: 201
+          #       responseBody:
+          #         description: blob was created
+          #       responseModels:
+          #         application/json: PostInfoResponse
+          #     - statusCode: 400
+          #       responseBody:
+          #         description: Invalid callback url supplied
+          #       responseModels:
+          #         application/json: PostErrorResponse
   get:
     handler: functions/get.get
     events:
