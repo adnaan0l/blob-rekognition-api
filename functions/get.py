@@ -33,7 +33,7 @@ def get(event, context):
         logger.info('Successfully retrieved id: {}'.format(blob_id))
         return {
             "statusCode": 200,
-            "body": json.dumps(response)
+            "body": json.dumps(response['Item'])
         }
 
     
