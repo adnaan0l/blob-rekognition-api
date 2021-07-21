@@ -144,7 +144,6 @@ functions:
     handler: functions/return.return_blob
     layers:
       - { Ref: DependanciesLambdaLayer }
-
     events:
       - stream:
           type: dynamodb
@@ -178,11 +177,11 @@ resources:
     #     BatchSize: 10
     #     EventSourceArn:
     #       Fn::GetAtt:
-    #         - ${self:provider.environment.DYNAMODB_TABLE}
+    #         - BlobsDynamoDbTable
     #         - StreamArn
     #     FunctionName:
     #       Fn::GetAtt:
-    #         - streamFunctionLambdaFunction
-    #         - Arn
-    #     StartingPosition: TRIM_HORIZON
+    #         - return
+    #         - { Ref: DependanciesLambdaLayer }
+    #     StartingPosition: LATEST
     #     Enabled: True

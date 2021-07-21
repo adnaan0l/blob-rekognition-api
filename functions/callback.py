@@ -1,18 +1,15 @@
 import json
 import logging
-import os
-import time
-import uuid
-
 import boto3
-from botocore.client import Config
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-## Generates blob id and save blob id, callback url into Dynamo DB table
+'''
+Callback function
 
-# Return upload HTML page with info + presigned URL
+To test the POST to the callback URL
+'''
 def callback(event, context):
 
     print(event)

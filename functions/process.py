@@ -1,52 +1,41 @@
-import json
-import time
 import logging
-import os
+import json
 import boto3
 
-from functions.helpers import detect_labels
+from functions.helpers import detect_labels, insert_data
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb = boto3.resource('dynamodb')
+'''
+Process function
 
+To detect labels and insert into Dynamo DB 
+'''
 def process(event, context):
 
-    object = event['Records'][0]['s3']['object']['key']
-    labels = detect_labels(object)
-
-    # Get current time
-    timestamp = int(time.time() * 1000)
-
-    # Load DynamoDB table
-    table = dynamodb.Table(os.environ['DYNAMODB_TABLE'])
+    blob_object = event['Records'][0]['s3']['object']['key']
     
-    blob_id = object.split('/')[1].split('.')[0]
-    
-    # Update the record in the database
-    response = table.update_item(
-        Key={
-            'id': blob_id
-        },
-        ExpressionAttributeNames={
-          '#labels': 'text',
-        },
-        ExpressionAttributeValues={
-          ':text': json.dumps(labels),
-          ':checked': True,
-          ':updatedAt': timestamp
-        },
-        UpdateExpression='SET #labels = :text, '
-                         'checked = :checked, '
-                         'updatedAt = :updatedAt',
-        ReturnValues='NONE',
-    )
+    # Get labels
+    labels = detect_labels(blob_object)
 
-    # Check if update success
+    # Get blob ID
+    blob_id = blob_object.split('/')[1].split('.')[0]
+
+    # Perform data insert
+    response = insert_data(blob_id, labels)
+
+    # Check valid response
     if response['ResponseMetadata']['HTTPStatusCode'] != 200:
-        logger.error('Error.Record id: {} failed.'.format(blob_id))
+        logger.error('Error processing id: {} failed.'.format(blob_id))
         logger.error(response)
+        return {
+            "statusCode": 401,
+            "body": json.dumps('Error')
+        }
     else:
-        logger.info('Success. Record id: {} updated.'.format(blob_id))
-
+        logger.info('Successfully processed id: {} updated.'.format(blob_id))
+        return {
+            "statusCode": 200,
+            "body": json.dumps('Success')
+        }
