@@ -1,5 +1,4 @@
 {
-    "statusCode" : 200,
     "blob_id": {
         "type": "string",
         "format": "uuid",

@@ -1,5 +1,4 @@
 {
-    "statusCode" : 200,
     "type": "object",
     "properties": {
         "callback_url": {

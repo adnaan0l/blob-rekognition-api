@@ -1,4 +1,3 @@
 {
-    "statuscode" : 400,
     "body": "Invalid callback url supplied"
-    }
+}

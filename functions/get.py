@@ -16,24 +16,38 @@ Fetch function
 To retrieve blob information from Dynamo DB 
 '''
 def get(event, context):
+    
     blob_id = event['pathParameters']['blob_id']
     
     # Fetch data
     response = fetch_data(blob_id)
-
+    
     # Check response valids
     if response['ResponseMetadata']['HTTPStatusCode'] != 200:
         logger.error('Error retrieving id: {} failed'.format(blob_id))
         logger.error(response)
         return {
             "statusCode": 401,
-            "body": json.dumps('Error')
+            "body": json.dumps('Error. Please contact Admin.')
         }
     else:
         logger.info('Successfully retrieved id: {}'.format(blob_id))
+        
+        try:
+            labels = json.loads(response['Item']['data'])
+        except:
+            json_data = {
+                'blob_id': response['Item']['id'],
+                'msg': 'Still processing'
+            }
+        else:
+            json_data = {
+                'blob_id': response['Item']['id'],
+                'labels': labels['Labels']
+            }
         return {
             "statusCode": 200,
-            "body": json.dumps(response['Item'])
+            "body": json.dumps(json_data)
         }
 
     
