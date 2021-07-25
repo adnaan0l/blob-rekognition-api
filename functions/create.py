@@ -15,8 +15,13 @@ To generates and save the blob id, callback url, timestamps into DynamoDB
 def create(event, context):
 
     try:
-        data = json.loads(event['body'])
-        data['callback_url']
+        try:
+            data = json.loads(event['body'])
+        except:
+            raise Exception('Invalid request parameters')
+            
+        if "callback_url" not in data:
+            raise Exception('Callback URL not provided.')
         
         # Creates blob info
         blob_info = to_dynamo(data)
@@ -27,8 +32,8 @@ def create(event, context):
     except Exception as e:
         logger.error(e)
         return {
-            "statusCode" : 401,
-            "body" : json.dumps('Error. Please contact admin.')
+            "statusCode" : 400,
+            "body" : json.dumps(str(e))
         }
     else:
         body = {
