@@ -12,6 +12,7 @@ To test the POST to the callback URL
 '''
 def callback(event, context):
 
+    logger.info("Success. Callback received.")
     print(event)
     
     return {
