@@ -27,8 +27,8 @@ def get(event, context):
         logger.error('Error retrieving id: {} failed'.format(blob_id))
         logger.error(response)
         return {
-            "statusCode": 401,
-            "body": json.dumps('Error. Please contact Admin.')
+            "statusCode": 404,
+            "body": json.dumps('Blob ID not found')
         }
     else:
         logger.info('Successfully retrieved id: {}'.format(blob_id))
