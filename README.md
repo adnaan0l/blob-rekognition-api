@@ -1,6 +1,6 @@
 # Blob Rekognition
 
-These scripts deploy APIs and Python functions allowing us to POST an image in JPEG and receive information about its contents as labels after passing it through the AWS Rekognition service. 
+Deploy APIs and Python functions allowing us to POST a JPEG image to the AWS Rekognition service and receive a response containing labels as recognized by the service. 
 
 AWS services used are API Gateway, Lambda, DynamoDB, S3 and Rekognition.
 
